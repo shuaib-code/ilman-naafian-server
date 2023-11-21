@@ -13,7 +13,6 @@ const client = new MongoClient(uri, { serverApi: { version: ServerApiVersion.v1,
 
 async function run() {
   try {
-    // await client.connect();
     const collected = client.db('ilman-naafian').collection('collected');
     const readList = client.db('ilman-naafian').collection('readList');
     const wishList = client.db('ilman-naafian').collection('wishList');
@@ -34,21 +33,25 @@ async function run() {
         res.send(result);
     })
 
+    app.get('/search',async(req,res)=>{
+        const bookList = await collected.find().toArray();
+        const search = req.query.search;
+        const result = bookList.filter(e=>e.bookName.includes(search));
+        res.send(result)
+    })
+    app.get('/totalitem',async(req,res)=>{
+        const count = await collected.estimatedDocumentCount();
+        res.send({count});
+    })
+
     app.get('/collect',async(req,res)=>{
-        const cursor = collected.find();
-        const result = await cursor.toArray();
-        res.send(result);
+        const page = parseInt(req.query.page);
+        const size = parseInt(req.query.size);
+        const cursor = await collected.find().skip(page*size).limit(size).toArray();
+        res.send(cursor);
     })
-    app.get('/readlist',async(req,res)=>{
-        const cursor = readList.find();
-        const result = await cursor.toArray();
-        res.send(result);
-    })
-    app.get('/wishlist',async(req,res)=>{
-        const cursor = wishList.find();
-        const result = await cursor.toArray();
-        res.send(result);
-    })
+    app.get('/readlist',async(req,res)=> res.send(await readList.find().toArray()))
+    app.get('/wishlist',async(req,res)=> res.send(await wishList.find().toArray()))
 
     app.put('/collect/:id',async(req,res)=>{
         const book = req.body;
@@ -78,11 +81,7 @@ async function run() {
         res.send(result);
     })
 
-    app.delete('/collect/:id',async(req,res)=>{
-        const filter = {_id: new ObjectId(req.params.id)};
-        const result = await collected.deleteOne(filter);
-        res.send(result);
-    })
+    app.delete('/collect/:id',async(req,res)=> res.send(await collected.deleteOne({_id: new ObjectId(req.params.id)})))
     app.delete('/note/:id', async(req,res)=>{
         const filter = {_id: new ObjectId(req.params.id)};
         const result = await readList.deleteOne(filter);

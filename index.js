@@ -17,27 +17,13 @@ async function run() {
     const readList = client.db('ilman-naafian').collection('readList');
     const wishList = client.db('ilman-naafian').collection('wishList');
 
-    app.post('/collect',async(req,res)=>{
-        const book = req.body;
-        const result = await collected.insertOne(book);
-        res.send(result);
-    })
-    app.post('/readlist',async(req,res)=>{
-        const book = req.body;
-        const result = await readList.insertOne(book);
-        res.send(result);
-    })
-    app.post('/wishlist',async(req,res)=>{
-        const book = req.body;
-        const result = await wishList.insertOne(book);
-        res.send(result);
-    })
+    app.post('/collect', async (req, res) => res.send(await collected.insertOne(req.body)));
+    app.post('/readlist',async(req,res)=> res.send(await readList.insertOne(req.body)))
+    app.post('/wishlist', async (req, res) => res.send(await wishList.insertOne(req.body)));
 
     app.get('/search',async(req,res)=>{
         const bookList = await collected.find().toArray();
-        const search = req.query.search;
-        const result = bookList.filter(e=>e.bookName.includes(search));
-        res.send(result)
+        res.send(bookList.filter(e=>e.bookName.includes(req.query.search)))
     })
     app.get('/totalitem',async(req,res)=>{
         const count = await collected.estimatedDocumentCount();
@@ -70,33 +56,15 @@ async function run() {
         res.send(result);
     })
 
-    app.patch('/note/:id',async(req,res)=>{
-        const filter = {_id: new ObjectId(req.params.id)};
-        const updateNote = {
-            $set:{
-                note: req.body.newNote
-            }
-        }
-        const result = await readList.updateOne(filter, updateNote);
-        res.send(result);
-    })
-
+    app.patch('/note/:id',async(req,res)=> res.send(await readList.updateOne({_id: new ObjectId(req.params.id)}, {$set:{note: req.body.newNote}})))
     app.delete('/collect/:id',async(req,res)=> res.send(await collected.deleteOne({_id: new ObjectId(req.params.id)})))
-    app.delete('/note/:id', async(req,res)=>{
-        const filter = {_id: new ObjectId(req.params.id)};
-        const result = await readList.deleteOne(filter);
-        res.send(result);
-    })
-    app.delete('/wishlist/:id',async(req,res)=>{
-        const filter = {_id: new ObjectId(req.params.id)};
-        const result = await wishList.deleteOne(filter);
-        res.send(result)
-    })
+    app.delete('/note/:id', async (req, res) => res.send(await readList.deleteOne({ _id: new ObjectId(req.params.id) })));
+    app.delete('/wishlist/:id',async(req,res)=> res.send(await wishList.deleteOne({_id: new ObjectId(req.params.id)})))
 
-  } finally {
-  }
-}
+} finally {}}
 run().catch(console.dir);
+
+app.all('*', (req, res) => res.send({ message: `[${req.url}] is not found.` }));
 
 
 app.get('/',(req,res)=>res.send('Ilman-Naafian Server is running...'));

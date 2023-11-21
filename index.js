@@ -93,7 +93,7 @@ async function run() {
         res.send(result)
     })
 
-  } finally {   // await client.close();
+  } finally {
   }
 }
 run().catch(console.dir);

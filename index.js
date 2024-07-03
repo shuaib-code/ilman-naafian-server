@@ -1,12 +1,12 @@
-const express = require('express');
-const cors = require('cors');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config();
+await import('dotenv').then(dotenv => dotenv.config());
+import express, { json } from 'express';
+import cors from 'cors';
+import { MongoClient, ServerApiVersion, ObjectId } from 'mongodb';
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.d5sxqgi.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true }});
@@ -30,12 +30,7 @@ async function run() {
         res.send({count});
     })
 
-    app.get('/collect',async(req,res)=>{
-        const page = parseInt(req.query.page);
-        const size = parseInt(req.query.size);
-        const cursor = await collected.find().skip(page*size).limit(size).toArray();
-        res.send(cursor);
-    })
+    app.get('/collect',async(req,res)=>res.send(await collected.find().toArray()))
     app.get('/readlist',async(req,res)=> res.send(await readList.find().toArray()))
     app.get('/wishlist',async(req,res)=> res.send(await wishList.find().toArray()))
 
